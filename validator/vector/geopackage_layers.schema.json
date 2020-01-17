@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+
+    "definitions": {
+        "columns": {
+            "type": "string",
+            "enum": ["units", "contacts"]
+        }
+    },
+
+    "type": "array",
+    "items": [
+        {
+            "$ref": "#/definitions/columns"
+        },
+        {
+            "$ref": "#/definitions/columns"
+        }
+    ],
+    "minItems": 2,
+    "uniqueItems": true,
+    "additionalItems": { "type": "string" }
+}
