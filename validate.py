@@ -4,13 +4,14 @@ import sys
 _here = os.path.abspath(__file__)
 sys.path.insert(0, _here)
 
+from validator import Validator
+
 
 config = {
     'geo_path': 'tmp/PM-MAR-MS-Arsinoes_01/vector/PM-MAR-MS-Arsinoes_01.gpkg',
     'geopackage_tables': ['units', 'contacts']
 }
 
-from validator import Validator
 
 def run(config, log_path):
     validator = Validator(config, log_path)

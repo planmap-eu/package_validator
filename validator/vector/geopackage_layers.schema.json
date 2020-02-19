@@ -1,8 +1,13 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+"$schema": "http://json-schema.org/draft-07/schema#",
+
+"title": "Match Geopackage layers list",
+
+"$comment": "Works for, e.g., ['units','contacts','bla'], but not for ['bla','units','contacts']",
+"$example": ["units","contacts","another-column"],
 
     "definitions": {
-        "columns": {
+        "layers": {
             "type": "string",
             "enum": ["units", "contacts"]
         }
@@ -11,13 +16,11 @@
     "type": "array",
     "items": [
         {
-            "$ref": "#/definitions/columns"
-        },
-        {
-            "$ref": "#/definitions/columns"
+            "$ref": "#/definitions/layers"
         }
     ],
     "minItems": 2,
+
     "uniqueItems": true,
     "additionalItems": { "type": "string" }
 }
