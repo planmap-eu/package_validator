@@ -11,15 +11,6 @@ import sys
 from itertools import zip_longest
 
 
-# _here = os.path.abspath(__file__)
-# sys.path.insert(0, _here)
-#
-# from validator import Validator
-#
-# config = {
-#     'geo_path': 'tmp/PM-MAR-MS-Arsinoes_01/vector/PM-MAR-MS-Arsinoes_01.gpkg',
-#     'geopackage_tables': ['units', 'contacts']
-# }
 import check
 
 import logging
@@ -75,28 +66,30 @@ def check_raster(pkg_specs, pkg_path):
 def check_model(pkg_specs, pkg_path):
     pass
 
-def run(pkg_path):
-    #parse package name
-    pkg_name = os.path.basename(os.path.abspath(pkg_path))
-    logger.debug(f"Package name: {pkg_name}")
-    pkg_specs = parse_package_name(pkg_name)
-    pkg_specs['name'] = pkg_name
-    logger.info(pkg_specs)
+def run(geopackage):
+    from .validator import vector
 
     # Check geopackage
-    out = check_vector(pkg_specs, pkg_path)
+    out = vector.check(geopackage)
 
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument('path', type=str,
-                        help="Path of PlanMap package")
+    parser.add_argument('fname', type=str,
+                        help="Path of GeoPackage")
+    parser.add_argument('--vector', default=False, action_store=True,
+                        help="Verifies a vector data file (GeoPackage)")
+    parser.add_argument('--schema', type=str,
+                        help="File with metadata structure to use as model")
 
     args = parser.parse_args()
-    pkg_path = args.path
+    if not args.vector:
+        print("Implemented for vectors only")
+        sys.exit(1)
 
-    # res = run(args.cfg, args.log)
+    fname = args.fname
+    schema = args.schema
 
-    res = run(pkg_path)
+    res = run(fname)
