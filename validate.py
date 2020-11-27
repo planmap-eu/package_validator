@@ -67,8 +67,7 @@ def check_model(pkg_specs, pkg_path):
     pass
 
 def run(geopackage):
-    from .validator import vector
-
+    from validator import vector
     # Check geopackage
     out = vector.check(geopackage)
 
@@ -79,7 +78,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('fname', type=str,
                         help="Path of GeoPackage")
-    parser.add_argument('--vector', default=False, action_store=True,
+    parser.add_argument('--vector', default=False, action='store_true',
                         help="Verifies a vector data file (GeoPackage)")
     parser.add_argument('--schema', type=str,
                         help="File with metadata structure to use as model")
