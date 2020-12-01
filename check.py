@@ -1,85 +1,127 @@
 import gpt
 
-def check_layer_names(pkg):
+
+planmap = {
+    'layers': {
+        'geologic_units': {
+            'columns': ['name','rgb','geo_type','geo_code'],
+            'geometry': 'Polygon'
+        },
+        'geologic_contacts': {
+            'columns': ['geo_type'],
+            'geometry': 'Linestring'
+        },
+        'surface_features': {
+            'columns': ['geo_type'],
+            'geometry': 'Polygon'
+        },
+        'linear_features': {
+            'columns': ['geo_type'],
+            'geometry': 'Linestring'
+        },
+        'layer_styles': {
+            'columns': ['styleQML','styleSLD']
+        }
+    }
+}
+
+def check_layer_names(pkg, layers):
     """
-    Some layers are mandatory, others are commonly used, but not necessarily.
+    Return True/False if all 'layers' were found/not
+
+    Args:
+        pkg: Geopkg
+        layers: List[str]
+            List of layer names expected to be found
     """
     out = []
-    _mandatory = ['geologic_units',
-                  'layer_styles']
-    _common = ['geologic_contacts',
-               'linear_features',
-               'surface_features']
 
-    # check for the mandatory one
-    if not all(l in pkg for l in _mandatory):
-        out.append("Mandatory layers {!s} not found.".format(_mandatory))
+    pl = set(pkg.keys())
+    el = set(layers)
 
-    # check for the commonly used.
-    # Extra layers -- not in _mandatory neither in _common -- can be used,
-    # which makes the checking for optional layers a bit will defined.
-    # What we can do here is to check for if there are many layers and *warn*
-    # the user if these _common ones are not there.
-    if len(pkg) >= len(_mandatory + _common):
-        if not all(l in pkg for l in _common):
-            # The cool thing to do here is to have their geometry inspected
-            # to have a clue on layer/content match
-            msg = "Expected to see layers {!s}".format(_common)
-            out.append(msg)
+    layers_found = el.intersection(pl)
+    layers_extra = pl.difference(el)
+    layers_notfound = el.difference(layers_found)
 
-    return out
+    print("Expected layers:", list(layers))
+    print("Layers found:", list(layers_found))
+    print("Layers not found:", list(layers_notfound))
+    print("Extra layers:", list(layers_extra))
 
-LAYER_DEFS = dict(
-    geologic_units = {'columns': ['name','rgb','geo_type','geo_code'],
-                      'geometry': 'Polygon'},
-    geologic_contacts = {'columns': ['geo_type'],
-                         'geometry': 'Linestring'},
-    surface_features = {'columns': ['geo_type'],
-                        'geometry': 'Polygon'},
-    linear_features = {'columns': ['geo_type'],
-                       'geometry': 'Linestring'},
-    layer_styles = {'columns': ['styleQML','styleSLD']}
-)
+    # Return True if all required layers were found
+    return len(layers_notfound) == 0
 
-def check_field_names(pkg, case_insensitive=False):
-    out = []
-    for _layer,_defs in LAYER_DEFS.items():
-        if _layer not in pkg:
-            msg = "Layer {} not found in pkg".format(_layer)
-            out.append(msg)
-            continue
 
-        if case_insensitive:
-            _check_columns = lambda c: c not in pkg[_layer].lower()
-        else:
-            _check_columns = lambda c: c not in pkg[_layer]
-        not_found = list(filter(_check_columns, _defs['columns']))
-        if len(not_found):
-            msg = "Columns {} not found in layer {}".format(not_found,_layer)
-            out.append(msg)
+def _check_if_sets_match(values_have, values_expected):
+    """
+    Return (notfound,extra) sets of "not-found" and "extra" values
 
-    return out
+    Args:
+        values_have: List[str]
+            Set/list of values we have at hand
+        values_expected: List[str]
+            Set/list of values we expect to find
+    """
+    have = set(values_have)
+    expect = set(values_expected)
+
+    found = expect.intersection(have)
+    notfound = expect.difference(found)
+    extra = have.difference(expect)
+
+    return (notfound, extra)
+
+
+def check_field_names(pkg, layer_columns, case_insensitive=False):
+    """
+    Return True/False if all columns were found/not in respective layer(s)
+
+    Args:
+        pkg: Geopkg
+        layer_columns: Dict[str, List[str]]
+            Dictionary providing columns names (values) for each layer (key)
+    """
+    for layer,columns in layer_columns.items():
+        assert layer in pkg, "Layer '{}' not found in pkg".format(layer)
+
+        notfound, extra = _check_if_sets_match(pkg[layer].columns, columns)
+
+        if len(notfound):
+            print("Columns {} not found in layer {}".format(notfound,layer))
+
+    return len(notfound) == 0
+
 
 def check_geometry(pkg):
     """
-    Check if geometry has nulls
+    Return True/False if geometry columns has some nulls/not
+
+    If _all_ values of a geometry column are Null, it's ok (case of 'layer_styles').
+    But if _some_ values are Null, it's not ok, return False.
+
+    Args:
+        pkg: Geopkg
     """
-    out = []
-    for lname, df in pkg.layers():
+    ok = True
+    for layer, df in pkg.layers:
         geometry_bool = df['geometry'].isnull()
         if all(geometry_bool):
+            print("All values of 'geometry' from layer '{}' are Null.".format(layer))
             continue
         if any(geometry_bool):
-            msg = ("Found null geometries in layer {}\n{}"
-                   .format(lname,df[geometry_bool]))
-            out.append(msg)
+            print("Found Null geometries in layer {}:".format(layer))
+            print(df[geometry_bool])
+            ok = False
 
-    return out
+    return ok
+
 
 def check_crs(pkg):
-    out = []
+    """
+    Return True if only one CRS is found, False if multiple were found
+    """
     CRSs = dict()
-    for lname, df in pkg.layers():
+    for lname, df in pkg.layers:
         crs = df.crs
         # - 'layer_styles' (by QGIS) has no 'geometry'
         # - accumulate crs(s) in a hash to check later for heterogeneity (multiple crs's)
@@ -90,13 +132,13 @@ def check_crs(pkg):
 
     # - if more than one crs was found, say it
     if len(CRSs) > 1:
-        out.append('Multiple CRSs found')
-
+        print('Multiple CRSs found')
     # For each crs (hopefully, one), print it (WKT)
     for crs,lrs in CRSs.items():
-        out.append(crs.to_string())
+        print(crs.to_string())
 
-    return out
+    return len(CRSs) == 1
+
 
 def geopackage(gpkg):
     """
@@ -114,9 +156,10 @@ def geopackage(gpkg):
     #     del pkg[lname]
 
     # Check layer names
-    res = check_layer_names(pkg)
-    res += check_field_names(pkg)
-    res += check_geometry(pkg)
-    res += check_crs(pkg)
-    for r in res:
-        print(r)
+    layers_defs = planmap['layers']
+    layer_columns = {l:defs['columns'] for l,defs in layers_defs.items()}
+
+    ok = check_layer_names(pkg, layers_defs.keys())
+    ok *= check_field_names(pkg, layer_columns)
+    ok *= check_geometry(pkg)
+    ok *= check_crs(pkg)

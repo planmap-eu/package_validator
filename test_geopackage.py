@@ -35,24 +35,37 @@ def gpkg():
 def test_00(geopkg_path):
     assert os.path.exists(geopkg_path), "Geopackage file/path NOT found."
     gpkg = gpt.read_file(geopkg_path)
-    assert gpkg
+    assert gpkg, "Geopackage is apparently empty/null."
     _data['gpkg'] = gpkg
+    print("\nGeopackage loaded ({})".format(geopkg_path))
 
 # def test_geopackage():
 #     out = check.geopackage(_data['gpkg'])
 
 def test_layer_names(gpkg):
+    print("\n* Layer names")
     res = check.check_layer_names(gpkg)
-    assert res
+    if res:
+        print("\n".join(res))
+    assert len(res) == 0
 
 def test_field_names(gpkg):
+    print("\n* Field names")
     res = check.check_field_names(gpkg)
-    assert res
+    if res:
+        print("\n".join(res))
+    assert len(res) == 0
 
 def test_geometry(gpkg):
     res = check.check_geometry(gpkg)
-    assert res
+    if res:
+        print("\n* Geometry")
+        print("\n".join(res))
+    assert len(res) == 0
 
 def test_crs(gpkg):
     res = check.check_crs(gpkg)
-    assert res
+    if res:
+        print("\n* CRS")
+        print("\n".join(res))
+    assert len(res) == 0
