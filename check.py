@@ -1,30 +1,6 @@
 import gpt
 
 
-planmap = {
-    'layers': {
-        'geologic_units': {
-            'columns': ['name','rgb','geo_type','geo_code'],
-            'geometry': 'Polygon'
-        },
-        'geologic_contacts': {
-            'columns': ['geo_type'],
-            'geometry': 'Linestring'
-        },
-        'surface_features': {
-            'columns': ['geo_type'],
-            'geometry': 'Polygon'
-        },
-        'linear_features': {
-            'columns': ['geo_type'],
-            'geometry': 'Linestring'
-        },
-        'layer_styles': {
-            'columns': ['styleQML','styleSLD']
-        }
-    }
-}
-
 def check_layer_names(pkg, layers):
     """
     Return True/False if all 'layers' were found/not
@@ -140,7 +116,7 @@ def check_crs(pkg):
     return len(CRSs) == 1
 
 
-def geopackage(gpkg):
+def geopackage(gpkg, schema_name='planmap'):
     """
     Checks to be done:
     - check layer names
@@ -150,13 +126,12 @@ def geopackage(gpkg):
     - check if there are multiple "shape" and "id" columns
     """
     pkg = gpt.read_file(gpkg)
-    # # make it "case insensitive" (lower the keys)
-    # for lname in list(pkg.keys()):
-    #     pkg[lname.lower()] = pkg[lname]
-    #     del pkg[lname]
+
+    import schema
+    gpkg_schema = getattr(schema,schema_name)
 
     # Check layer names
-    layers_defs = planmap['layers']
+    layers_defs = gpkg_schema['layers']
     layer_columns = {l:defs['columns'] for l,defs in layers_defs.items()}
 
     ok = check_layer_names(pkg, layers_defs.keys())

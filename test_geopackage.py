@@ -14,9 +14,9 @@ import check
 
 
 _data = {
-    'gpkg': None
+    'gpkg': None,
+    'schema': None
 }
-
 
 # def find_gpkg(pkg_path):
 #     pkg_name = os.path.basename(os.path.abspath(pkg_path))
@@ -29,43 +29,53 @@ def geopkg_path(pytestconfig):
     return pytestconfig.getoption('pkgpath')
 
 @pytest.fixture()
+def schema_name(pytestconfig):
+    return pytestconfig.getoption('schema')
+
+@pytest.fixture()
 def gpkg():
     return _data['gpkg']
 
-def test_00(geopkg_path):
+@pytest.fixture()
+def schema():
+    return _data['schema']
+
+@pytest.fixture()
+def layer_names():
+    layers_defs = _data['schema']['layers']
+    return layers_defs.keys()
+
+@pytest.fixture()
+def layers_columns():
+    layers_defs = _data['schema']['layers']
+    return {l:defs['columns'] for l,defs in layers_defs.items()}
+
+
+def test_00(geopkg_path, schema_name):
     assert os.path.exists(geopkg_path), "Geopackage file/path NOT found."
     gpkg = gpt.read_file(geopkg_path)
     assert gpkg, "Geopackage is apparently empty/null."
     _data['gpkg'] = gpkg
     print("\nGeopackage loaded ({})".format(geopkg_path))
+    import schema
+    gpkg_schema = getattr(schema,schema_name)
+    _data['schema'] = gpkg_schema
 
-# def test_geopackage():
-#     out = check.geopackage(_data['gpkg'])
 
-def test_layer_names(gpkg):
+def test_layer_names(gpkg, layer_names):
     print("\n* Layer names")
-    res = check.check_layer_names(gpkg)
-    if res:
-        print("\n".join(res))
-    assert len(res) == 0
+    res = check.check_layer_names(gpkg, layer_names)
+    assert res is True
 
-def test_field_names(gpkg):
+def test_field_names(gpkg, layers_columns):
     print("\n* Field names")
-    res = check.check_field_names(gpkg)
-    if res:
-        print("\n".join(res))
-    assert len(res) == 0
+    res = check.check_field_names(gpkg, layers_columns)
+    assert res is True
 
 def test_geometry(gpkg):
     res = check.check_geometry(gpkg)
-    if res:
-        print("\n* Geometry")
-        print("\n".join(res))
-    assert len(res) == 0
+    assert res is True
 
 def test_crs(gpkg):
     res = check.check_crs(gpkg)
-    if res:
-        print("\n* CRS")
-        print("\n".join(res))
-    assert len(res) == 0
+    assert res is True
