@@ -1,12 +1,16 @@
-import gpt
+import os
 import check
 
 if __name__ == '__main__':
-    import sys
+    import argparse
+    parser = argparse.ArgumentParser(description="Validate Geopackages")
 
-    if len(sys.argv) < 2:
-        print("\nUsage: {} <path/to/geopackage>".format(sys.argv[0]))
-        sys.exit(1)
+    parser.add_argument('gpkg', type=str,
+                        help="File/path to Geopackage")
 
-    filename = sys.argv[1]
+    args = parser.parse_args()
+
+    filename = args.gpkg
+    assert os.path.isfile(filename), f"Filename '{filename}' does not exist"
+
     check.geopackage(filename)
