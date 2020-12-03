@@ -9,18 +9,8 @@
   "type": "object",
 
   "properties": {
-    "layer_styles"      : {
-      "type" : "object",
-      "properties" : {
-        "geometry" : {
-          "type" : "array"
-        }
-      },
-      "required" : [
-        "geometry"
-      ],
-      "additionalProperties": true
-    },
+
+    "layer_styles"      : { "type" : "object" },
     "geologic_units"    : { "type" : "object" },
     "linear_features"   : { "type" : "object" },
     "surface_features"  : { "type" : "object" },
