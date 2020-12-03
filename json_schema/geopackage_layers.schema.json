@@ -3,24 +3,26 @@
 
   "title": "Match Geopackage layers list",
 
-  "$comment": "Works for, e.g., ['units','contacts','bla'], but not for ['bla','units','contacts']",
-  "$example": ["units","contacts","another-column"],
+  "$comment": "Defines mandatory layers, and allows extra ones.",
+  "$example": "{'geologic_contacts':'bla','geologic_units':'blu','layer_styles':'foo','linear_features':'wow','surface_features':'yay'}",
 
-  "definitions": {
-    "layers": {
-      "type": "string",
-      "enum": ["units", "contacts"]
-    }
+  "type": "object",
+
+  "properties": {
+    "layer_styles"      : { "type" : "string" },
+    "geologic_units"    : { "type" : "string" },
+    "linear_features"   : { "type" : "string" },
+    "surface_features"  : { "type" : "string" },
+    "geologic_contacts" : { "type" : "string" }
   },
 
-  "type": "array",
-  "items": [
-    {
-      "$ref": "#/definitions/layers"
-    }
+  "required" : [
+    "geologic_contacts",
+    "geologic_units",
+    "layer_styles",
+    "linear_features",
+    "surface_features"
   ],
-  "minItems": 2,
 
-  "uniqueItems": true,
-  "additionalItems": { "type": "string" }
+  "additionalProperties": true
 }
