@@ -9,11 +9,22 @@
   "type": "object",
 
   "properties": {
-    "layer_styles"      : { "type" : "string" },
-    "geologic_units"    : { "type" : "string" },
-    "linear_features"   : { "type" : "string" },
-    "surface_features"  : { "type" : "string" },
-    "geologic_contacts" : { "type" : "string" }
+    "layer_styles"      : {
+      "type" : "object",
+      "properties" : {
+        "geometry" : {
+          "type" : "array"
+        }
+      },
+      "required" : [
+        "geometry"
+      ],
+      "additionalProperties": true
+    },
+    "geologic_units"    : { "type" : "object" },
+    "linear_features"   : { "type" : "object" },
+    "surface_features"  : { "type" : "object" },
+    "geologic_contacts" : { "type" : "object" }
   },
 
   "required" : [
@@ -25,8 +36,9 @@
   ],
 
   "patternProperties" : {
-    "^[A-Za-z][A-Za-z0-9_]*$" : { "type" : "string" }
+    "^[A-Za-z][A-Za-z0-9_]*$" : { "type" : "object" }
   },
 
-  "additionalProperties" : { "type" : "string" }
+  "additionalProperties" : { "type" : "object" }
+
 }
