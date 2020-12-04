@@ -1,0 +1,7 @@
+{
+  "$id": "layer_layer_styles.json",
+  "title": "QGIS 'layer_styles' schema",
+  "description": "Defines the entries/rows of the table across the columns.",
+
+  "type": "object"
+}

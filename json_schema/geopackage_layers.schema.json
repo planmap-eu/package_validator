@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "base.schema.json",
 
   "title": "Match Geopackage layers list",
 
@@ -10,7 +10,7 @@
 
   "properties": {
 
-    "layer_styles"      : { "type" : "object" },
+    "layer_styles"      : { "$ref" : "layer_layer_styles.json" },
     "geologic_units"    : { "type" : "object" },
     "linear_features"   : { "type" : "object" },
     "surface_features"  : { "type" : "object" },
@@ -18,11 +18,11 @@
   },
 
   "required" : [
-    "geologic_contacts",
-    "geologic_units",
     "layer_styles",
+    "geologic_units",
     "linear_features",
-    "surface_features"
+    "surface_features",
+    "geologic_contacts"
   ],
 
   "patternProperties" : {

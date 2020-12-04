@@ -1,31 +1,70 @@
+import os
 import gpt
+import jsonschema
 
-_component = __file__.split('.')[0]
-_schemafile = '.'.join([_component, 'schema', 'json'])
+_curdir = os.path.dirname(os.path.abspath(__file__))
 
-with open(_schemafile) as f:
+
+def read_schemas(basedir, pattern='*.schema.json'):
+    """
+    Return a dictionary with all schemas from 'basedir' matching 'pattern'
+    """
     import json
-    schema = json.load(f)
+    from glob import glob
 
-def validate(gpkg_path):
-    # import fiona
-    # data = fiona.listlayers(gpkg_path)
+    schemas = {}
+    for fn in glob(os.path.join(basedir, pattern)):
+        try:
+            with open(fn) as f:
+                js = json.load(f)
+        except:
+            print(f"Error loading JSON: '{fn}'")
+            raise
+        else:
+            # If the schema has no "$id" key, we adhoc push one: the filename,
+            # which is reasonable since this is the simplest, valid, and
+            # normally the way schemas will cross-reference each other.
+            _fn = os.path.basename(fn)
+            if "$id" not in js:
+                js["$id"] = _fn # +"#"
+            schemas[js["$id"]] = js
+
+    return schemas
+
+
+schema_store = read_schemas(_curdir)
+
+
+def validate(gpkg_path, schema='geopackage_layers.schema.json'):
+    # from jsonschema import Draft7Validator as Validator
+    from jsonschema import RefResolver
+    from jsonschema.validators import validator_for
+
+    # If we had a simple schmea we could use jsonschema's 'validate' function
+    # (as we did as first):
+    # > import jsonschema
+    # > res = jsonschema.validate(data, schema)
+    #
+    # But since the schema tree got a bit more complex,
+    # > https://json-schema.org/understanding-json-schema/structuring.html,
+    # we now have to creack open the components a little bit.
+    #
+    # One of the steps taken was to create a very simple "base" schema.
+    # The "base" schema has two purposes: (1) to be used as the base
+    # schema for jsonschema's RefResolver object, and (2) to define the
+    # version of json-schema (currently draft-07) we're using in one single place.
+
+    # Since we have "refs" in our schemas, we need a resolver to link them
+    resolver = RefResolver.from_schema(schema_store['base.schema.json'], store=schema_store)
+
+    # Get the correct (or best) validator for our schema's version
+    Validator = validator_for(schema_store['base.schema.json'])
+
+    # Put them all together to define the validator/schema set to use
+    validator = Validator(schema_store[schema], resolver=resolver)
+
     gpkg = gpt.read_file(gpkg_path)
+    data = gpkg.to_dict()
 
-    # print("\nGeoPackage layers/columns:")
-    # for name,table in gpkg.layers:
-    #     print(name)
-    #     print(table.columns)
-    #     print()
-
-    # This is a workaround during devel, until I understand how to tell jsonschema about the DataFrames
-    # data = {ln:{} for ln in gpkg.list()}
-    # data['layer_styles']['geometry'] = list(gpkg['layer_styles']['geometry'].values)
-    # data['layer_styles']['geometry'] = []
-    # print(data)
-    data = gpkg.to_json()
-
-    import jsonschema
-    res = jsonschema.validate(data, schema)
-
+    res = validator.validate(data)
     return res
