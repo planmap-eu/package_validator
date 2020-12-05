@@ -55,7 +55,8 @@ def validate(gpkg_path, schema='geopackage_layers.schema.json'):
     # version of json-schema (currently draft-07) we're using in one single place.
 
     # Since we have "refs" in our schemas, we need a resolver to link them
-    resolver = RefResolver.from_schema(schema_store['base.schema.json'], store=schema_store)
+    # resolver = RefResolver.from_schema(schema_store['base.schema.json'], store=schema_store)
+    resolver = RefResolver.from_schema(schema_store[schema], store=schema_store)
 
     # Get the correct (or best) validator for our schema's version
     Validator = validator_for(schema_store['base.schema.json'])
@@ -64,7 +65,15 @@ def validate(gpkg_path, schema='geopackage_layers.schema.json'):
     validator = Validator(schema_store[schema], resolver=resolver)
 
     gpkg = gpt.read_file(gpkg_path)
+
     data = gpkg.to_dict()
+    data.pop('layer_styles')
+    print("\nGeoPackage DICT layers/columns:")
+    for name,table in data.items():
+        print(name)
+        print(list(table.keys()))
+        print()
 
     res = validator.validate(data)
+    # jsonschema.validate(data, schema_store[schema])
     return res

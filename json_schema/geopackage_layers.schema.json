@@ -1,20 +1,16 @@
 {
-  "$ref": "base.schema.json",
-
   "title": "Match Geopackage layers list",
-
   "$comment": "Defines mandatory layers, and allows extra ones.",
   "$example": "{'geologic_contacts':'bla','geologic_units':'blu','layer_styles':'foo','linear_features':'wow','surface_features':'yay'}",
 
-  "type": "object",
+  "type" : "object",
 
   "properties": {
-
-    "layer_styles"      : { "$ref" : "layer_layer_styles.json" },
+    "layer_styles"      : { "$ref" : "layer_layer_styles.json#" },
     "geologic_units"    : { "type" : "object" },
     "linear_features"   : { "type" : "object" },
     "surface_features"  : { "type" : "object" },
-    "geologic_contacts" : { "type" : "object" }
+    "geologic_contacts" : { "$ref" : "layer_geologic_contacts.json#" }
   },
 
   "required" : [

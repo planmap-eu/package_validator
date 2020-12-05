@@ -1,0 +1,16 @@
+{
+  "$id": "layer_geologic_contacts.json",
+  "title": "QGIS 'geologic_contacts' schema",
+  "description": "Defines the entries/rows of the table across the columns.",
+
+  "type" : "object",
+
+  "properties" : {
+    "Contact_ty"    : { "type" : "object" },
+    "geometry"      : { "type" : "object" }
+  },
+  "required": [
+    "Contact_ty",
+    "geometry"
+  ]
+}
